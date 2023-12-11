@@ -14,15 +14,13 @@
 		integrity= 
 "sha512-iphNRh6dPbeuPGIrQbCdbBF/qcqadKWLa35YPVfMZMHBSI6PLJh1om2xCTWhpVpmUyb4IvVS9iYnnYMkleVXLA=="
 		crossorigin="anonymous"
-		referrerpolicy="no-referrer"></script> 
-	
+		referrerpolicy="no-referrer"></script> 	
 	<style> 
 		table { 
 			border: 1px solid black; 
 			margin-left: auto; 
 			margin-right: auto; 
 		} 
-
 		input[type="button"] { 
 			width: 100%; 
 			padding: 20px 40px; 
@@ -33,17 +31,16 @@
 			border: none; 
 			border-radius: 5px; 
 		} 
-        input[type="buttonblue"] {
-            width: 50%; 
+        	input[type="buttonclicked"] { 
+			width: 100%; 
 			padding: 20px 40px; 
-			background-color: #008CBA;; 
+			background-color: yellow; 
 			color: white; 
-			font-size: 18px; 
+			font-size: 24px; 
 			font-weight: bold; 
 			border: none; 
 			border-radius: 5px; 
-                    
-        }
+		} 
 
 		input[type="text"] { 
 			padding: 20px 30px; 
@@ -52,13 +49,22 @@
 			border: none; 
 			border-radius: 5px; 
 			border: 2px solid black; 
+            text-align:center;
 		} 
 
 	</style> 
 </head> 
 	
-<body onload="makeProblem()">
-	<h2 id=heading> Add, subtract, and/or multiple all 4 numbers to produce this answer </h2>
+<body onload="choosedifficulty()">
+    <div style="text-align:center;">
+	    <h2 id=heading> Add, subtract, and/or multiple all 4 numbers to yield Solution </h2>
+        <label for="dif">Choose level of difficulty:</label>
+        <select name="dif" id="dif">
+            <option value="easy">EASY</option>
+            <option value="intermediate">INTERMEDIATE</option>
+            <option value="hard">HARD</option>
+        </select>
+    </div>    
     <p></p>
 
 	<table id="rslt"> 
@@ -82,9 +88,8 @@
 			<td><input type="button" id="but5" value="*" onclick="dis('*')" </td> 
             <td><input type="button" id="but6" value="+" onclick="dis('+')" </td>
             <td><input type="button" id="but7" value="-" onclick="dis('-')" </td>
-            <td><input type="button" id="but8" value=""   </td> 
-		</tr> 
-		
+            <td><input type="button" id="but8" value=" "   </td> 
+		</tr> 		
 	</table> 
     <p></p>
     
@@ -96,28 +101,69 @@
 
 	<table id="clear"> 
 		<tr> 
-			<td><input type="button" id="clear" value="Try Again" onclick="clr()" </td> 
+			<td><input type="button" id="clearbut" value="Do Over" onclick="clr()" </td> 
 			<td><input type="button" id="start" value="New Problem" onclick="clrnew()" </td> 
+            <td><input type="button" id="reveal" value="Reveal" onclick="reveal()" </td>
 		</tr> 
+
     </table>
+    <div style="text-align:center">
+	    <h3 id="gameover;color=red"></h3>
+    </div>
+
     <script> 
+        // define global variables
         var val = "";
         var arrAnswr = [];
+        var operators = []; // array of arithmetic operators
+        var equation = ""; //generated formula
+        var res = ""; // answer to generated formula
+        var difficulty = "";
         var numClickCnt = 0; // count of number button clicks. must be four
-        function test() {
-            alert("test");
+        
+        // re-style  the found user control buttons at bottom of page
+        document.getElementById('clearbut').style = 'color: yellow; font-size: 16px; padding: 20px 20px ';
+        document.getElementById('start').style = 'color: yellow; font-size: 16px; padding: 20px 20px';
+        document.getElementById('reveal').style = 'color: yellow; font-size: 16px; padding: 20px 20px; ';
+        
+        function choosedifficulty() {
+            // run only once when html file is first loaded
+            difficulty = document.getElementById('dif').value;
+            makeProblem(difficulty);
         }
-        
-        
-        function makeProblem() {
+        // listen for changes to difficulty level
+        document.getElementById("dif").onchange = changeListener;
+ 
+        function changeListener(){
+            // on change of difficulty level, create new problem
+            var value = this.value
+            difficulty = value;
+            clr();
+            makeProblem(difficulty);
+        }
+    
+             
+        function makeProblem(diff) {
         //------------------------------------------------------
         // This function 1) generates 4 non-repeating random numbers 
         // 1 and 9 and sets numeric button row labels and values and
         // 2) generates a math problem with those 4 numbers and displays
         // the answer to the user.
         //------------------------------------------------------
+          if(diff == "easy") {
+              // hide multiply button
+              document.getElementById('but5').style.color = 'green';
+              // set operators to only + or =
+              operators = ['+', '-'];
+          }
+          if(diff == "intermediate" || diff == "hard") {
+              // set operators to include multiply
+              operators = ['+', '-', '*'];
+              // reveal multiply button
+              document.getElementById('but5').style.color = 'white';
+            }
+ 
           // generate random numbers
-          console.log('makeProblem');
           var arr = [];
           var newarr = [];
           // get array of 4 random numbers between 1-9
@@ -129,27 +175,38 @@
           document.getElementById('but3').value = arr[2];
           document.getElementById('but4').value = arr[3];
           // get 3 random operators for problem
-          op1 = getOperator();
-          op2 = getOperator();
-          op3 = getOperator();
+          op1 = getOperator(operators);
+          op2 = getOperator(operators);
+          op3 = getOperator(operators);
           // shuffle the array of 4 random numbers
           newarr = shuffle(arr);
-          var equation = newarr[0] + op1 + newarr[1] + op2 + newarr[2] + op3 + newarr[3];
-          alert(equation);
+          equation = newarr[0] + op1 + newarr[1] + op2 + newarr[2] + op3 + newarr[3];
           // incrementally evaluate equation
           var eArr = Array.from(equation);
-          var res = eval(eArr[0]);
+          res = eval(eArr[0]);
           res = eval(res + eArr[1] + eArr[2]);
           res = eval(res + eArr[3] + eArr[4]);
           res = eval(res + eArr[5] + eArr[6]);
-          console.log(equation + ' = ' + res);
-          document.getElementById("targetanswer").value = 'Target Answer = ' + res;
+          //console.log(equation + ' = ' + res);
+          document.getElementById("targetanswer").value = 'Solution = ' + res;
+            
+          // if difficulty "hard" generate answer with at least 3 digits
+          var numDigits = res.toString().length;
+          if(diff == "hard" && numDigits < 3) {
+            makeProblem(diff);
+          }
 
         }  // end of makeProblem function
     
 		function dis(butnum) {
+            //-------------------------------------------------------------
+            // This function builds user's solution based on the number and 
+            // operator buttons that user selects
+            //-------------------------------------------------------------
+            
             if(butnum == '1' || butnum == '2' || butnum == '3' || butnum == '4') {
-
+                // process number button click by user
+                
                 // hide row of number buttons
                 document.getElementById('numbuttons').style='display:none;';
               	//show row of operator buttons
@@ -161,21 +218,24 @@
                     alert('game over, stop clicking');
                 }
                 
-                var but = 'but'+butnum;
+                var but = 'but'+ butnum;
                 val = document.getElementById(but).value;
                 // check to see if number already used
+                // if user clicks same number button twice, dispaly 
+                // error msg and terminate for user to start over
                 var numUsed = document.getElementById("problem").value;
                 if(numUsed.indexOf(val) > -1) {
                     alert('Cannot use a number more than once. Try again');
-                    // restore number buttons in view
                     // hide row of operator buttons
                     document.getElementById('oprbuttons').style='display:none;';
               	    //show row of number buttons
                     document.getElementById('numbuttons').style='display:table-row;';
                     return;
                 }
-                // hide used button
-                document.getElementById(but).style.visibility = 'hidden';
+                // hide used button by setting button's number to green so
+                // user no longer sees it
+
+                document.getElementById(but).style.color = 'green';
                 ans = document.getElementById("problem").value
                 document.getElementById("problem").value = ans+val;
                 arrAnswr.push(val);
@@ -190,15 +250,25 @@
                 console.log('val: ' + val + ' arrAnswr: ' + arrAnswr);
                 // update answer field on form
                 document.getElementById("answer").value = y;
-                if(numClickCnt == 4) {
-                    alert("game over");
-                    // reset counter
+                // after user has clicked 4 number buttons, end the problem session
+                if(numClickCnt == 4) {                  
+                    if(y == res) {
+                        //alert("CONGRATULATIONS! You got it right!.");
+                        document.getElementById('heading').innerHTML = "CONGRATULATIONS! Your answer is <b>Correct<b/>.";   
+                    }
+                    else {
+                        var lostmsg = "Nice try, but no cigar. <br/>Click Do Over to try again, <br/>or click New Problem for a different formula."
+                        document.getElementById('heading').innerHTML = lostmsg;
+                    }
+                    document.getElementById('heading').style = "color: red";
+                    // reset number button counter
                     numClickCnt = 0;
                 }
-
             }
             
             if(butnum == '*' || butnum == '+' || butnum == '-') {
+                // process operator button click by user
+                
                 // hide row of operator buttons
                 document.getElementById('oprbuttons').style='display:none;';
               	//show row of number buttons
@@ -228,9 +298,11 @@
         } // end of dis() function
 
 		// Function that clears the display 
-		function clr() { 
+		function clr() {
 			document.getElementById("problem").value = "";
-            document.getElementById("answer").value = "0";
+            document.getElementById("answer").value = "0"
+            document.getElementById('heading').innerHTML = "Add, subtract, and/or multiple all 4 numbers to yield Solution";
+            document.getElementById('heading').style = "color: black";
             arrAnswr = [""];
 
             // show all button rows
@@ -242,19 +314,29 @@
             document.getElementById('but2').style.visibility = 'visible';
             document.getElementById('but3').style.visibility = 'visible';
             document.getElementById('but4').style.visibility = 'visible';
-            
+            document.getElementById('but1').style.color = 'white';
+            document.getElementById('but2').style.color = 'white';
+            document.getElementById('but3').style.color = 'white';
+            document.getElementById('but4').style.color = 'white';            
 		}
-        // function that clears display and presents new problem
+
         function clrnew() {
+            //------------------------------------------------------
+            // function that clears display and presents new problem
+            //------------------------------------------------------
             clr();
-            makeProblem();
+            makeProblem(difficulty);
         }
 
-        function getOperator() {
-            // Generate a random arithmetic operator (+, -, *, /)
-            var operators = ['+', '-', '*'];
+        function getOperator(operators) {
+            //--------------------------------------------------
+            // function that selects random arithmetic operators
+            //--------------------------------------------------
+            console.log('getOperators-operators: ' + operators);
+            // Generate a random arithmetic operator           
             var operatorIndex = Math.floor(Math.random() * operators.length);
             var operator = operators[operatorIndex];
+            console.log('operators: ' + operators);
             return operator;
         }
 
@@ -280,8 +362,10 @@
         }
 
         function shuffle(array) {
+          //-------------------------------------------------
           // This function shuffles the order of the provided
           // array and returns it in a random order
+          //-------------------------------------------------
           let currentIndex = array.length,  randomIndex;      
           // While there remain elements to shuffle.
           while (currentIndex > 0) {     
@@ -294,9 +378,14 @@
           }
           return array;
         }
-     
-	</script>
-    
-</body> 
 
+        function reveal(result) {
+            //---------------------------------------------------
+            // If user clicks button 'Reveal' this function shows
+            // the answer
+            //----------------------------------------------------
+            alert('The solution is: ' + equation + ' = ' + res);
+        }     
+	</script>    
+</body> 
 </html> 
