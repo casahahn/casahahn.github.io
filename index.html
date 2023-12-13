@@ -35,12 +35,13 @@
 			font-weight: bold; 
 			border: none; 
 			border-radius: 5px; 
+            focus{background-color:red;}
 		} 
         input[type="buttonclicked"] { 
 			width: 100%; 
 			padding: 20px 40px; 
-			background-color: yellow; 
-			color: white; 
+			background-color: lightgray; 
+			color: black; 
 			font-size: 24px; 
 			font-weight: bold; 
 			border: none; 
@@ -56,6 +57,14 @@
 			border: 2px solid black; 
             text-align:center;
 		} 
+        .Disabled{
+            pointer-events: none;
+            cursor: not-allowed;
+            opacity: 0.65;
+            filter: alpha(opacity=65);
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
 
 	</style> 
 </head> 
@@ -93,8 +102,9 @@
 			<td><input type="button" id="but5" value="*" onclick="dis('*')" </td> 
             <td><input type="button" id="but6" value="+" onclick="dis('+')" </td>
             <td><input type="button" id="but7" value="-" onclick="dis('-')" </td>
-            <td><input type="button" id="but8" value=" "   </td> 
-		</tr> 		
+            <td><input type="button" id="but8" value="" </td> 
+		</tr> 	
+ 
 	</table> 
     <p></p>
     
@@ -125,8 +135,11 @@
         var res = ""; // answer to generated formula
         var difficulty = "";
         var numClickCnt = 0; // count of number button clicks. must be four
+
         
         // re-style  the found user control buttons at bottom of page
+        // background-color: green; 
+        // document.getElementById('oprbuttons').style = 'background-color: green';
         document.getElementById('clearbut').style = 'color: yellow; font-size: 16px; padding: 20px 20px ';
         document.getElementById('start').style = 'color: yellow; font-size: 16px; padding: 20px 20px';
         document.getElementById('reveal').style = 'color: yellow; font-size: 16px; padding: 20px 20px; ';
@@ -147,10 +160,9 @@
             clr();
             makeProblem(difficulty);
         }
-    
              
         function makeProblem(diff) {
-            
+
         // console.log('makeProblem-difficulty: ' + difficulty);
         //------------------------------------------------------
         // This function 1) generates 4 non-repeating random numbers 
@@ -158,6 +170,7 @@
         // 2) generates a math problem with those 4 numbers and displays
         // the answer to the user.
         //------------------------------------------------------
+
           if(diff == "easy") {
               // hide multiply button
               document.getElementById('but5').style.color = 'green';
@@ -217,12 +230,16 @@
             
             if(butnum == '1' || butnum == '2' || butnum == '3' || butnum == '4') {
                 // process number button click by user
+
+                // Number button selected so display operator row as top
+                SwapRows("oprbuttons","numbuttons");
                 
-                // hide row of number buttons
-                document.getElementById('numbuttons').style='display:none;';
+                // hide first row of number buttons
+                ////document.getElementById('numbuttons').style='display:none;';
+
               	//show row of operator buttons
-                document.getElementById('oprbuttons').style='display:table-row;';
-                
+                ////document.getElementById('oprbuttons').style='display:table-row;';
+
                 // button pressed was a number so compute running total
                 numClickCnt++;
                 if(numClickCnt > 4) {
@@ -230,7 +247,10 @@
                 }
                 
                 var but = 'but'+ butnum;
+                // get value of clicked number button
                 val = document.getElementById(but).value;
+                // hide button just clicked
+                document.getElementById(but).style.visibility = 'hidden';
                 // check to see if number already used
                 // if user clicks same number button twice, dispaly 
                 // error msg and terminate for user to start over
@@ -243,10 +263,7 @@
                     document.getElementById('numbuttons').style='display:table-row;';
                     return;
                 }
-                // hide used button by setting button's number to green so
-                // user no longer sees it
 
-                document.getElementById(but).style.color = 'green';
                 ans = document.getElementById("problem").value
                 document.getElementById("problem").value = ans+val;
                 arrAnswr.push(val);
@@ -262,7 +279,7 @@
                 // update answer field on form
                 document.getElementById("answer").value = y;
                 // after user has clicked 4 number buttons, end the problem session
-                if(numClickCnt == 4) {                  
+                if(numClickCnt == 4) {                 
                     if(y == res) {
                         //alert("CONGRATULATIONS! You got it right!.");
                         document.getElementById('heading').innerHTML = "CONGRATULATIONS! Your answer is <b>Correct<b/>.";   
@@ -274,16 +291,16 @@
                     document.getElementById('heading').style = "color: red";
                     // reset number button counter
                     numClickCnt = 0;
+                    // disable all buttons
+                    setButtonStatus('disableAll');
                 }
             }
             
             if(butnum == '*' || butnum == '+' || butnum == '-') {
                 // process operator button click by user
+                // Operator button selected so display number button row as top
+                SwapRows("numbuttons","oprbuttons");
                 
-                // hide row of operator buttons
-                document.getElementById('oprbuttons').style='display:none;';
-              	//show row of number buttons
-                document.getElementById('numbuttons').style='display:table-row;';
                 if(butnum == '*') {
                     // push operator into answer array
                     arrAnswr.push('*'); 
@@ -308,7 +325,7 @@
             }
         } // end of dis() function
 
-		// Function that clears the display 
+		// Function that clears the display and resets values
 		function clr() {
             document.getElementById('heading').innerHTML = "Create formula using all 4 numbers that yields Solution";
 			document.getElementById("problem").value = "";
@@ -328,7 +345,14 @@
             document.getElementById('but1').style.color = 'white';
             document.getElementById('but2').style.color = 'white';
             document.getElementById('but3').style.color = 'white';
-            document.getElementById('but4').style.color = 'white';            
+            document.getElementById('but4').style.color = 'white';  
+
+            // make sure number button row is on top
+            SwapRows('numbuttons','oprbuttons');
+            // reset number button counter
+            numClickCnt = 0;
+            // endable all buttons
+            setButtonStatus('enableAll');
 		}
 
         function clrnew() {
@@ -343,11 +367,11 @@
             //--------------------------------------------------
             // function that selects random arithmetic operators
             //--------------------------------------------------
-            console.log('getOperators-operators: ' + operators);
+            //console.log('getOperators-operators: ' + operators);
             // Generate a random arithmetic operator           
             var operatorIndex = Math.floor(Math.random() * operators.length);
             var operator = operators[operatorIndex];
-            console.log('operators: ' + operators);
+            //console.log('operators: ' + operators);
             return operator;
         }
 
@@ -397,7 +421,68 @@
             //----------------------------------------------------
             alert('The solution is: ' + equation + ' = ' + res);
         }
-     
+
+        function SwapRows(makeTop,makeBottom) {
+            console.log('makeTop: ' + makeTop + ' makeBottom: ' + makeBottom);
+	        var buttonTable= document.getElementById("calcu"); //numbuttons
+	        var rowOne = document.getElementById(makeBottom);
+	        var rowTwo = document.getElementById(makeTop);
+	        rowOne.parentNode.insertBefore(rowTwo,rowOne);
+            setButtonStatus(makeTop);
+        }
+
+            function setButtonStatus(makeTop) {
+            // make bottom row unclickable and set top row to clickable
+                if(makeTop == 'oprbuttons') {
+                    // disable numbuttons row
+                    document.getElementById('but1').disabled = "true";
+                    document.getElementById('but2').disabled = "true";
+                    document.getElementById('but3').disabled = "true";
+                    document.getElementById('but4').disabled = "true";
+                    // enable oprbuttons row
+                    document.getElementById('but5').removeAttribute("disabled");
+                    document.getElementById('but6').removeAttribute("disabled");
+                    document.getElementById('but7').removeAttribute("disabled");
+                    document.getElementById('but8').removeAttribute("disabled");              
+    
+                } else {
+                    // disable oprbuttons row
+                    document.getElementById('but5').disabled = "true";
+                    document.getElementById('but6').disabled = "true";
+                    document.getElementById('but7').disabled = "true";
+                    document.getElementById('but8').disabled = "true";
+                    // enable numbuttons row
+                    document.getElementById('but1').removeAttribute("disabled");
+                    document.getElementById('but2').removeAttribute("disabled");
+                    document.getElementById('but3').removeAttribute("disabled");
+                    document.getElementById('but4').removeAttribute("disabled");
+                }
+                if(makeTop == 'disableAll') {
+                     // disable numbuttons row
+                    document.getElementById('but1').disabled = "true";
+                    document.getElementById('but2').disabled = "true";
+                    document.getElementById('but3').disabled = "true";
+                    document.getElementById('but4').disabled = "true";
+                     // disable oprbuttons row
+                    document.getElementById('but5').disabled = "true";
+                    document.getElementById('but6').disabled = "true";
+                    document.getElementById('but7').disabled = "true";
+                    document.getElementById('but8').disabled = "true";
+                }
+                if(makeTop == 'enableAll') {
+                     // enable oprbuttons row
+                    document.getElementById('but5').removeAttribute("disabled");
+                    document.getElementById('but6').removeAttribute("disabled");
+                    document.getElementById('but7').removeAttribute("disabled");
+                    document.getElementById('but8').removeAttribute("disabled");  
+                     // enable numbuttons row
+                    document.getElementById('but1').removeAttribute("disabled");
+                    document.getElementById('but2').removeAttribute("disabled");
+                    document.getElementById('but3').removeAttribute("disabled");
+                    document.getElementById('but4').removeAttribute("disabled");
+                }
+            }
+
 	</script>
     
 </body> 
